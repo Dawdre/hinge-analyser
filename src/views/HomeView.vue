@@ -16,9 +16,23 @@ const { data: likes, execute: fetchLikes } = useApi('/api/v1/likes', {
   immediate: false
 }).get()
 
+const { data: stats, execute: fetchStats } = useApi('/api/v1/stats', {
+  immediate: false
+}).get()
+
 const fileUploadHeaderFunction = (_: any) => ({
   Authorization: `Bearer ${localStorage.getItem('token') || ''}`
 })
+
+async function matchesAll() {
+  await fetchMatches()
+}
+async function likesAll() {
+  await fetchLikes()
+}
+async function statsAll() {
+  await fetchStats()
+}
 
 onMounted(() => {
   userStore.loadGoogleLoginLibrary()
@@ -40,10 +54,21 @@ onMounted(() => {
       >
         <n-upload-dragger> Click or drag a file to this area </n-upload-dragger>
       </n-upload>
-      <n-button type="primary" @click="fetchMatches">Fetch Matches</n-button>
-      <n-button type="primary" @click="fetchLikes">Fetch Likes</n-button>
-      {{ matches }}<br />
-      {{ likes }}
+      <n-button type="primary" @click="matchesAll">Fetch Matches</n-button>
+      <n-button type="primary" @click="likesAll">Fetch Likes</n-button>
+      <n-button type="primary" @click="statsAll">Fetch Stats</n-button>
+      <div v-if="matches">
+        <h2>Matches</h2>
+        <pre>{{ matches }}</pre>
+      </div>
+      <div v-if="likes">
+        <h2>Likes</h2>
+        <pre>{{ likes }}</pre>
+      </div>
+      <div v-if="stats">
+        <h2>Stats</h2>
+        <pre>{{ stats }}</pre>
+      </div>
     </div>
   </main>
 </template>
