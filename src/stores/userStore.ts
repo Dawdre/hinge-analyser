@@ -7,7 +7,7 @@ import CredentialResponse = google.accounts.id.CredentialResponse;
 const GOOGLE_IDENTITY_CLIENT_LIBRARY_SRC = "https://accounts.google.com/gsi/client";
 
 export interface User {
-  givenName: string;
+  name: string;
   picture: string;
   email: string;
 }
@@ -64,12 +64,12 @@ export const useUserStore = defineStore("userStore", () => {
   async function handleGoogleLogin(response: CredentialResponse) {
     const { data: userAuth } = await useApi<{ status: "success"; token: "token" }>(
       "/token").post({ id_token: response.credential });
-    console.log(userAuth.value!.token)
+
     localStorage.setItem("token", userAuth.value!.token);
     fetchUserDetails();
   }
 
-  function logOut() {
+  function signOut() {
     localStorage.removeItem("token");
     userDetails.value = null;
     // sign out of google library
@@ -84,6 +84,6 @@ export const useUserStore = defineStore("userStore", () => {
     fetchUserDetails,
     loadGoogleLoginLibrary,
     showGoogleLoginButton,
-    logOut,
+    signOut,
   }
 });
