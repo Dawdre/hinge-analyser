@@ -18,11 +18,15 @@ defineProps<{ title: string }>()
 <style lang="scss">
 .ha-template {
   display: grid;
-  justify-content: center;
+  padding: 1rem;
   min-height: 100vh;
 
   &__content {
     display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto max-content max-content;
+    align-content: flex-start;
+    gap: 1rem;
   }
 }
 </style>

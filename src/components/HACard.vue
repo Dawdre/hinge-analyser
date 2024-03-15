@@ -16,7 +16,7 @@ import { NCard, NH2, NSkeleton } from 'naive-ui'
 
 defineProps<{
   loading: boolean
-  cardTitle: string
+  cardTitle?: string
   cardData: Array<T>
   labelExtractor: (cardData: T) => string
   valueExtractor: (cardData: T) => string
@@ -25,14 +25,24 @@ defineProps<{
 
 <style lang="scss">
 .ha-card {
+  align-self: flex-start;
+
+  &__content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
   &__data {
     display: flex;
+    flex-flow: column;
     flex-wrap: wrap;
 
     &-value {
       flex: 1;
       font-weight: bold;
-      font-size: 3rem;
+      font-size: 2rem;
+      line-height: normal;
     }
   }
 }
