@@ -1,13 +1,16 @@
 <script setup lang="ts">
 import { useUserStore } from '@/stores/userStore'
 
-import { NUpload, NUploadDragger, NH2 } from 'naive-ui'
-import { computed, onMounted } from 'vue'
+import { NUpload, NUploadDragger, NH2, NButton, NSkeleton } from 'naive-ui'
+import { computed, onMounted, ref } from 'vue'
 import GoogleLoginButton from '@/components/GoogleLoginButton.vue'
 import { useApi } from '@/composables/useApi'
 import HATemplate from '@/templates/HATemplate.vue'
 import UserInfo from '@/components/UserInfo.vue'
 import HACard from '@/components/HACard.vue'
+import HAPerson from '@/components/HAPerson.vue'
+import type { Person } from '@/types/api'
+import type { PersonsWithPagination } from '@/types/util'
 
 const userStore = useUserStore()
 
@@ -18,8 +21,6 @@ const userStore = useUserStore()
 // const { data: likes, execute: fetchLikes } = useApi('/api/v1/likes', {
 //   immediate: false
 // }).get()
-
-const { data: persons } = useApi('/api/v1/person').get()
 
 interface Stats {
   matches: {
@@ -55,11 +56,44 @@ interface Stats {
   }
 }
 
-const { data: stats, isFetching: isLoadingStats } = useApi<Stats>('/api/v1/stats').get()
+const personsUrl = ref('/api/v1/persons?page=40')
+
+const {
+  data: stats,
+  execute: fetchStats,
+  isFetching: isLoadingStats
+} = useApi<Stats>('/api/v1/stats', { immediate: false }).get()
+
+const {
+  data: persons,
+  execute: fetchPersons,
+  isFetching: isLoadingPersons
+} = useApi<PersonsWithPagination>(
+  personsUrl,
+  { immediate: false, refetch: true }).get()
+
+await fetchStats()
+await fetchPersons()
 
 const fileUploadHeaderFunction = () => ({
   Authorization: `Bearer ${localStorage.getItem('token') || ''}`
 })
+
+const fileUploadFinishFunction = (file: any) => {
+  fetchStats()
+  fetchPersons()
+  console.log('finished', file)
+}
+
+const deleteEverything = () => {
+  useApi<void>('/api/v1/delete-all').delete()
+
+  stats.value = null
+}
+
+const changePage = (page: number) => {
+  personsUrl.value = `/api/v1/persons?page=${page}`
+}
 
 const cardMatches = computed(() => {
   if (stats.value) {
@@ -93,11 +127,11 @@ const cardLikes = computed(() => {
   if (stats.value) {
     return [
       {
-        label: 'Total Likes',
+        label: 'Likes sent',
         value: stats.value.likes.total_like_count
       },
       {
-        label: 'Likes Per Day',
+        label: 'Likes Received and Matched, Per Day',
         value: stats.value.likes.likes_received_per_day_for_given_range.likes
       }
     ]
@@ -124,13 +158,6 @@ const rangeDate = computed(() => {
   return ''
 })
 
-// async function matchesAll() {
-//   await fetchMatches()
-// }
-// async function likesAll() {
-//   await fetchLikes()
-// }
-
 onMounted(() => {
   userStore.loadGoogleLoginLibrary()
 })
@@ -148,6 +175,7 @@ onMounted(() => {
         action="http://localhost:8000/api/v1/upload"
         accept=".json"
         :headers="fileUploadHeaderFunction"
+        :onFinish="fileUploadFinishFunction"
       >
         <n-upload-dragger> Upload your Hinge "matches.json" file here </n-upload-dragger>
       </n-upload>
@@ -168,6 +196,12 @@ onMounted(() => {
       />
     </template>
     <template #footer>
+      <template v-if="!isLoadingPersons">
+        <h-a-person v-if="persons" :sortedPersons="persons" @page-change="changePage"/>
+      </template>
+      <n-skeleton v-else :sharp="false" :height="200" />
+
+      <n-button @click="deleteEverything">Delete everything</n-button>
       <user-info />
     </template>
   </h-a-template>
